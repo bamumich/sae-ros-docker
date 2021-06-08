@@ -1,4 +1,5 @@
 # docker build -t sae_ws:ros_ws .
+# docker run -it -t sae_ws:ros_ws
 
 # Install Ubuntu 20.04 LTS - Focal Fossa
 FROM ubuntu:20.04
@@ -25,6 +26,7 @@ RUN pip3 install glob2 regex
 # Handle user-prompt for debconf frontend keyboard selection
 RUN echo 'debconf debconf/frontend select Noninteractive' | sudo debconf-set-selections
 
+# Install ROS - Noetic & Packages
 RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" \
         > /etc/apt/sources.list.d/ros-latest.list'
 
@@ -32,7 +34,7 @@ RUN apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' \
         --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
 
 RUN apt-get update --fix-missing && apt-get upgrade -y && apt-get install -y \
-        ros-noetic-ros-base \
+        ros-noetic-ros-base ros-noetic-catkin \
         ros-noetic-joy ros-noetic-teleop-twist-joy \
         ros-noetic-teleop-twist-keyboard ros-noetic-laser-proc \
         ros-noetic-rgbd-launch ros-noetic-rosserial-arduino \
@@ -42,4 +44,41 @@ RUN apt-get update --fix-missing && apt-get upgrade -y && apt-get install -y \
         ros-noetic-compressed-image-transport ros-noetic-rqt* ros-noetic-rviz \
         ros-noetic-gmapping ros-noetic-navigation ros-noetic-interactive-markers \
         ros-noetic-dynamixel-sdk ros-noetic-turtlebot3-msgs ros-noetic-turtlebot3 \
-        ros-noetic-pid ros-noetic-catkin
+        ros-noetic-pid \
+        python3-rosdep python3-rosinstall python3-rosinstall-generator python3-wstool \
+        && rm -rf /var/lib/apt/lists/*
+
+SHELL ["/bin/bash", "-c"]
+RUN source /opt/ros/noetic/setup.bash
+RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+RUN source ~/.bashrc
+
+RUN mkdir ~/catkin_ws/
+RUN mkdir ~/catkin_ws/src
+RUN /bin/bash -c '. /opt/ros/noetic/setup.bash; catkin_init_workspace ~/catkin_ws/src'
+WORKDIR ~/catkin_ws
+RUN /bin/bash -c '. /opt/ros/noetic/setup.bash; cd ~/catkin_ws; catkin_make'
+RUN echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
+RUN source ~/.bashrc
+
+RUN /bin/bash -c 'source /opt/ros/noetic/setup.bash &&\
+    mkdir -p ~/catkin_ws/src &&\
+    cd ~/catkin_ws/src &&\
+    #catkin_init_workspace &&\
+    cd ~/catkin_ws &&\
+    catkin_make'
+
+# Download & Install ROS Tutorials
+# 1. Creating Catkin Workspace
+# clone ros package repo
+ENV ROS_WS /opt/ros_ws
+RUN mkdir -p $ROS_WS/src
+WORKDIR $ROS_WS
+RUN git -C src clone \
+      -b noetic-devel \
+      https://github.com/ros/ros_tutorials.git
+
+# build ros package source
+RUN /bin/bash -c '. /opt/ros/noetic/setup.bash \
+        cd ~/catkin_ws/src catkin_make'
+
