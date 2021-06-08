@@ -1,3 +1,5 @@
+# docker build -t sae_ws:ros_ws .
+
 # Install Ubuntu 20.04 LTS - Focal Fossa
 FROM ubuntu:20.04
 
