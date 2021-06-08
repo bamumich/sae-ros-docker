@@ -12,7 +12,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y apt-utils
 
 # Install dependencies for ROS - Noetic
 RUN apt-get update --fix-missing && apt-get upgrade -y && apt-get install -y \
-        sudo dialog git openssh-server wget curl cmake python3 python3-pip \
+        sudo dialog git openssh-server wget curl cmake nano python3 python3-pip \
         python3-empy python3-nose python3-setuptools build-essential \
         libgtest-dev libsdl2-dev libsdl2-2.0-0 libsdl2-image-dev libsdl2-image-2.0-0 \
         libboost-all-dev
@@ -53,32 +53,23 @@ RUN source /opt/ros/noetic/setup.bash
 RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
 RUN source ~/.bashrc
 
-RUN mkdir ~/catkin_ws/
-RUN mkdir ~/catkin_ws/src
-RUN /bin/bash -c '. /opt/ros/noetic/setup.bash; catkin_init_workspace ~/catkin_ws/src'
-WORKDIR ~/catkin_ws
-RUN /bin/bash -c '. /opt/ros/noetic/setup.bash; cd ~/catkin_ws; catkin_make'
-RUN echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc
-RUN source ~/.bashrc
-
-RUN /bin/bash -c 'source /opt/ros/noetic/setup.bash &&\
-    mkdir -p ~/catkin_ws/src &&\
-    cd ~/catkin_ws/src &&\
-    #catkin_init_workspace &&\
-    cd ~/catkin_ws &&\
-    catkin_make'
-
-# Download & Install ROS Tutorials
-# 1. Creating Catkin Workspace
-# clone ros package repo
 ENV ROS_WS /opt/ros_ws
 RUN mkdir -p $ROS_WS/src
+RUN /bin/bash -c '. /opt/ros/noetic/setup.bash; catkin_init_workspace $ROS_WS/src'
+WORKDIR $ROS_WS
+RUN /bin/bash -c '. /opt/ros/noetic/setup.bash; cd $ROS_WS; catkin_make'
+RUN echo "source $ROS_WS/devel/setup.bash" >> ~/.bashrc
+RUN source ~/.bashrc
+
+RUN rosdep init
+RUN rosdep update
+
+# Download & Install ROS Tutorials
 WORKDIR $ROS_WS
 RUN git -C src clone \
       -b noetic-devel \
       https://github.com/ros/ros_tutorials.git
 
 # build ros package source
-RUN /bin/bash -c '. /opt/ros/noetic/setup.bash \
-        cd ~/catkin_ws/src catkin_make'
+RUN /bin/bash -c '. /opt/ros/noetic/setup.bash cd $ROS_WS/src catkin_make'
 
