@@ -1,10 +1,3 @@
-# docker build -t sae_ws:ros_ws .
-# docker run -it -t sae_ws:ros_ws
-# docker run -d -it -t sae_ws:ros_ws
-# docker ps
-# docker exec -it $CONTAINER_ID bash
-# docker exec -it 84845b3c0d9d bash
-
 # Install Ubuntu 20.04 LTS - Focal Fossa
 FROM ubuntu:20.04
 
