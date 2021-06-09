@@ -43,6 +43,9 @@ RUN apt-get update --fix-missing && apt-get upgrade -y && apt-get install -y \
         ros-noetic-dynamixel-sdk ros-noetic-turtlebot3-msgs ros-noetic-turtlebot3 \
         ros-noetic-pid ros-noetic-turtlesim \
         python3-rosdep python3-rosinstall python3-rosinstall-generator python3-wstool \
+        xserver-xorg xinit mesa-utils libegl1-mesa libegl1-mesa-dev \
+        libgbm-dev libgbm1 libgl1-mesa-dev libgl1-mesa-dri libgl1-mesa-glx \
+        libglu1-mesa libglu1-mesa-dev mesa-common-dev qt5-default\
         && rm -rf /var/lib/apt/lists/*
 
 # Bash hoops to jump through
@@ -69,5 +72,5 @@ RUN git -C src clone \
       https://github.com/ros/ros_tutorials.git
 
 # Build ROS Package Source
-RUN /bin/bash -c '. /opt/ros/noetic/setup.bash cd $ROS_WS/src catkin_make'
-
+RUN /bin/bash -c '. /opt/ros/noetic/setup.bash cd $ROS_WS rosmake turtlesim'
+RUN /bin/bash -c '. /opt/ros/noetic/setup.bash cd $ROS_WS catkin_make'
