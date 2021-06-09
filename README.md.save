@@ -1,0 +1,11 @@
+# sae-ros-docker
+
+Author: Brian A. Mulrooney
+Email: bamu@umich.edu
+Purpose: ROS1 Docker Container for SAE ADAS Bootcamp
+
+--------------
+: 2021.06.08 :
+--------------
+
+* Dockerfile generated and tested successfully, catkin hurdle overcome

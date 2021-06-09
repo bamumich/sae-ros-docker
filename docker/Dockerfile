@@ -1,5 +1,9 @@
 # docker build -t sae_ws:ros_ws .
 # docker run -it -t sae_ws:ros_ws
+# docker run -d -it -t sae_ws:ros_ws
+# docker ps
+# docker exec -it $CONTAINER_ID bash
+# docker exec -it 84845b3c0d9d bash
 
 # Install Ubuntu 20.04 LTS - Focal Fossa
 FROM ubuntu:20.04
@@ -44,10 +48,11 @@ RUN apt-get update --fix-missing && apt-get upgrade -y && apt-get install -y \
         ros-noetic-compressed-image-transport ros-noetic-rqt* ros-noetic-rviz \
         ros-noetic-gmapping ros-noetic-navigation ros-noetic-interactive-markers \
         ros-noetic-dynamixel-sdk ros-noetic-turtlebot3-msgs ros-noetic-turtlebot3 \
-        ros-noetic-pid \
+        ros-noetic-pid ros-noetic-turtlesim \
         python3-rosdep python3-rosinstall python3-rosinstall-generator python3-wstool \
         && rm -rf /var/lib/apt/lists/*
 
+# Bash hoops to jump through
 SHELL ["/bin/bash", "-c"]
 RUN source /opt/ros/noetic/setup.bash
 RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
@@ -70,6 +75,6 @@ RUN git -C src clone \
       -b noetic-devel \
       https://github.com/ros/ros_tutorials.git
 
-# build ros package source
+# Build ROS Package Source
 RUN /bin/bash -c '. /opt/ros/noetic/setup.bash cd $ROS_WS/src catkin_make'
 
