@@ -13,19 +13,28 @@
 - Useful docker commands:
 	<p>
 	$ docker build -t sae_ws:ros_ws .
+
 	$ docker run -it --rm \
+
  		--env="QT_X11_NO_MITSHM=1" \
+
  		-v /tmp/.X11-unix:/tmp/.X11-unix \
+		 
  		-e DISPLAY=unix$DISPLAY \
+
  		sae_ws:ros_ws
+
 		$ docker ps
+
 		$ docker exec -it $CONTAINER_ID bash
+
 		$ docker exec -it ad633723cabd bash
 	</p>
 
 - Launching ROS & Turtlebot
 	<p>
 	$ roscore
+	
     $ roslaunch turtlebot3_gazebo turtlebot3_empty_world.launch
 	</p>
 
