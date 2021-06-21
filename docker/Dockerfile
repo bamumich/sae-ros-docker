@@ -46,6 +46,9 @@ RUN apt-get update --fix-missing && apt-get upgrade -y && apt-get install -y \
         xserver-xorg xinit mesa-utils libegl1-mesa libegl1-mesa-dev \
         libgbm-dev libgbm1 libgl1-mesa-dev libgl1-mesa-dri libgl1-mesa-glx \
         libglu1-mesa libglu1-mesa-dev mesa-common-dev qt5-default\
+        libgazebo11-dev \
+        ros-noetic-ros-control ros-noetic-gazebo-ros-control \
+        ros-noetic-ros-controllers ros-noetic-teb-local-planner \
         && rm -rf /var/lib/apt/lists/*
 
 # Bash hoops to jump through
@@ -65,12 +68,26 @@ RUN source ~/.bashrc
 RUN rosdep init
 RUN rosdep update
 
-# Download & Install ROS Tutorials
+# Download & Install ROS Tutorials, TurtleBot, & F1 Tenth
 WORKDIR $ROS_WS
 RUN git -C src clone \
       -b noetic-devel \
       https://github.com/ros/ros_tutorials.git
+RUN git -C src clone \
+        -b noetic-devel \
+        https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git
+# RUN git -C src clone \
+#        -b noetic-devel \
+#        https://github.com/linklab-uva/f1tenth_gtc_tutorial
 
 # Build ROS Package Source
 RUN /bin/bash -c '. /opt/ros/noetic/setup.bash cd $ROS_WS rosmake turtlesim'
+RUN /bin/bash -c '. /opt/ros/noetic/setup.bash cd $ROS_WS rosmake turtlebot3'
+RUN /bin/bash -c '. /opt/ros/noetic/setup.bash cd $ROS_WS catkin_make'
+
+WORKDIR $~
+RUN echo "export TURTLEBOT3_MODEL=burger" >> ~/.bashrc
+RUN source ~/.bashrc
+
+WORKDIR $ROS_WS
 RUN /bin/bash -c '. /opt/ros/noetic/setup.bash cd $ROS_WS catkin_make'
