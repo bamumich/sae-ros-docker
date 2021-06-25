@@ -1,7 +1,8 @@
 # Install Ubuntu 20.04 LTS - Focal Fossa
 FROM ubuntu:20.04
 
-# Handle user-prompt for Ubuntu installation time zone selection
+# Handle user-prompt for Ubuntu installation (time zone selection & keyboard)
+ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=America
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
@@ -10,15 +11,24 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y apt-utils
 # Install dependencies for ROS - Noetic
 RUN apt-get update --fix-missing && apt-get upgrade -y && apt-get install -y \
         sudo dialog git openssh-server wget curl cmake nano python3 python3-pip \
-        python3-empy python3-nose python3-setuptools build-essential \
+        python3-empy python3-nose python3-setuptools build-essential gedit \
         libgtest-dev libsdl2-dev libsdl2-2.0-0 libsdl2-image-dev libsdl2-image-2.0-0 \
-        libboost-all-dev
+        libboost-all-dev libgbm-dev libgbm1 libgl1-mesa-dev libgl1-mesa-dri \
+        libgl1-mesa-glx libglu1-mesa libglu1-mesa-dev mesa-common-dev \
+        xserver-xorg xinit mesa-utils libegl1-mesa  \
+        qt5-default libopencv-dev python3-opencv software-properties-common
 
-RUN apt-get autoclean && apt-get autoremove && apt-get update --fix-missing && \
+# Install QT4
+RUN add-apt-repository ppa:gezakovacs/ppa
+RUN apt-get update --fix-missing && apt-get upgrade -y && apt-get install -y \
+        qt4-default
+
+# Clean & Fix Any Conflicts
+RUN apt-get autoclean && apt-get autoremove -y && apt-get update --fix-missing && \
         apt-get upgrade -y && dpkg --configure -a && apt-get install -f
 
 # Install required python3 packages
-RUN pip3 install glob2 regex
+RUN pip3 install glob2 regex pyqtgraph 
 
 # Handle user-prompt for debconf frontend keyboard selection
 RUN echo 'debconf debconf/frontend select Noninteractive' | sudo debconf-set-selections
@@ -43,12 +53,11 @@ RUN apt-get update --fix-missing && apt-get upgrade -y && apt-get install -y \
         ros-noetic-dynamixel-sdk ros-noetic-turtlebot3-msgs ros-noetic-turtlebot3 \
         ros-noetic-pid ros-noetic-turtlesim \
         python3-rosdep python3-rosinstall python3-rosinstall-generator python3-wstool \
-        xserver-xorg xinit mesa-utils libegl1-mesa libegl1-mesa-dev \
-        libgbm-dev libgbm1 libgl1-mesa-dev libgl1-mesa-dri libgl1-mesa-glx \
-        libglu1-mesa libglu1-mesa-dev mesa-common-dev qt5-default\
-        libgazebo11-dev \
-        ros-noetic-ros-control ros-noetic-gazebo-ros-control \
-        ros-noetic-ros-controllers ros-noetic-teb-local-planner \
+        ros-noetic-ros-control ros-noetic-gazebo-ros-control ros-noetic-ros-controllers \
+        ros-noetic-teb-local-planner libgazebo11-dev ros-noetic-urg-c \
+        ros-noetic-ackermann-msgs ros-noetic-gazebo-ros-pkgs \
+        ros-noetic-tf2-geometry-msgs ros-noetic-driver-base \
+        ros-noetic-tf-conversions \
         && rm -rf /var/lib/apt/lists/*
 
 # Bash hoops to jump through
@@ -65,6 +74,7 @@ RUN /bin/bash -c '. /opt/ros/noetic/setup.bash; cd $ROS_WS; catkin_make'
 RUN echo "source $ROS_WS/devel/setup.bash" >> ~/.bashrc
 RUN source ~/.bashrc
 
+# Init & Update ROSdep
 RUN rosdep init
 RUN rosdep update
 
@@ -73,12 +83,16 @@ WORKDIR $ROS_WS
 RUN git -C src clone \
       -b noetic-devel \
       https://github.com/ros/ros_tutorials.git
+
 RUN git -C src clone \
         -b noetic-devel \
         https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git
-# RUN git -C src clone \
-#        -b noetic-devel \
-#        https://github.com/linklab-uva/f1tenth_gtc_tutorial
+
+RUN git -C src clone \
+        https://github.com/bamumich/sae-f1-sim.git
+
+WORKDIR /opt/ros_ws/src/
+RUN mv sae-f1-sim f110-simulator-public
 
 # Build ROS Package Source
 RUN /bin/bash -c '. /opt/ros/noetic/setup.bash cd $ROS_WS rosmake turtlesim'
@@ -87,6 +101,11 @@ RUN /bin/bash -c '. /opt/ros/noetic/setup.bash cd $ROS_WS catkin_make'
 
 WORKDIR $~
 RUN echo "export TURTLEBOT3_MODEL=burger" >> ~/.bashrc
+RUN source ~/.bashrc
+
+WORKDIR $ROS_WS
+RUN /bin/bash -c '. /opt/ros/noetic/setup.bash; cd $ROS_WS; catkin_make'
+RUN echo "source $ROS_WS/devel/setup.bash" >> ~/.bashrc
 RUN source ~/.bashrc
 
 WORKDIR $ROS_WS
