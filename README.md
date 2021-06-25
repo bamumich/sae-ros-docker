@@ -21,7 +21,6 @@
 #### Useful docker commands:
 
 ##### Example of Building from Dockerfile
-	`
 	$ docker build -t sae_ws:ros_ws .
 	
 ##### Example of mounting the Lane Keeping repo into docker	
@@ -44,15 +43,14 @@
 	$ docker ps
 	$ docker exec -it $CONTAINER_ID bash
 	$ docker exec -it 89c1429ad42b bash
-	`
+	
 ##### Launching ROS, Turtlebot, F1/10 Simulator
-	`
 	$ roscore
     $ roslaunch turtlebot3_gazebo turtlebot3_empty_world.launch
 	$ roslaunch race f1_tenth.launch
 	$ roslaunch f1tenth_simulator simulator.launch
 	$ roslaunch lane_keeping lane_keep.launch
-	`
+
 
 ##### [ROS Docker Tutorial](https://wiki.ros.org/docker/Tutorials/GUI)
 
