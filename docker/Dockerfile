@@ -1,5 +1,5 @@
 # Install Ubuntu 20.04 LTS - Focal Fossa
-FROM ubuntu:20.04
+FROM nvidia/cuda:11.3.1-runtime-ubuntu20.04
 
 # Handle user-prompt for Ubuntu installation (time zone selection & keyboard)
 ENV DEBIAN_FRONTEND=noninteractive
@@ -57,7 +57,9 @@ RUN apt-get update --fix-missing && apt-get upgrade -y && apt-get install -y \
         ros-noetic-teb-local-planner libgazebo11-dev ros-noetic-urg-c \
         ros-noetic-ackermann-msgs ros-noetic-gazebo-ros-pkgs \
         ros-noetic-tf2-geometry-msgs ros-noetic-driver-base \
-        ros-noetic-tf-conversions \
+        ros-noetic-tf-conversions ros-noetic-usb-cam \
+        ros-noetic-image-transport ros-noetic-cv-bridge ros-noetic-vision-opencv \
+        python3-opencv libopencv-dev ros-noetic-image-proc \
         && rm -rf /var/lib/apt/lists/*
 
 # Bash hoops to jump through
@@ -91,16 +93,25 @@ RUN git -C src clone \
 RUN git -C src clone \
         https://github.com/bamumich/sae-f1-sim.git
 
+RUN git -C src clone \
+        https://github.com/bamumich/aue_finals
+
 WORKDIR /opt/ros_ws/src/
 RUN mv sae-f1-sim f110-simulator-public
 
 # Build ROS Package Source
 RUN /bin/bash -c '. /opt/ros/noetic/setup.bash cd $ROS_WS rosmake turtlesim'
 RUN /bin/bash -c '. /opt/ros/noetic/setup.bash cd $ROS_WS rosmake turtlebot3'
+RUN /bin/bash -c '. /opt/ros/noetic/setup.bash cd $ROS_WS rosmake aue_finals'
 RUN /bin/bash -c '. /opt/ros/noetic/setup.bash cd $ROS_WS catkin_make'
 
 WORKDIR $~
 RUN echo "export TURTLEBOT3_MODEL=burger" >> ~/.bashrc
+RUN source ~/.bashrc
+
+ENV GAZEBO_MODELS_PATH="/opt/ros_ws/src/turtlebot3_simulations/turtlebot3_gazebo/models"
+RUN cp -r /opt/ros_ws/src/aue_finals/models/. $GAZEBO_MODELS_PATH
+RUN echo "export GAZEBO_MODEL_PATH=$GAZEBO_MODELS_PATH" >> ~/.bashrc
 RUN source ~/.bashrc
 
 WORKDIR $ROS_WS
@@ -110,3 +121,57 @@ RUN source ~/.bashrc
 
 WORKDIR $ROS_WS
 RUN /bin/bash -c '. /opt/ros/noetic/setup.bash cd $ROS_WS catkin_make'
+
+# Install Tensorflow
+# WORKDIR /
+
+# RUN pip3 install launchpadlib keras==2.4.3 h5py numpy opencv-python
+# RUN pip3 install --user --upgrade tensorflow==2.4.1
+
+
+# RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+# LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
+# ENV NCCL_VERSION 2.9.9
+
+# RUN apt-get update --fix-missing && apt-get upgrade -y && apt-get install -y \
+#         pciutils nvidia-cuda-toolkit \
+#         libtinfo5 libncursesw5 \
+#         cuda-cudart-dev-11-3=11.3.109-1 \
+#         cuda-command-line-tools-11-3=11.3.1-1 \
+#         cuda-minimal-build-11-3=11.3.1-1 \
+#         cuda-libraries-dev-11-3=11.3.1-1 \
+#         cuda-nvml-dev-11-3=11.3.58-1 \
+#         libnpp-dev-11-3=11.3.3.95-1 \
+#         libnccl-dev=2.9.9-1+cuda11.3 \
+#         libcublas-dev-11-3=11.5.1.109-1 \
+#         libcusparse-dev-11-3=11.6.0.109-1 \
+#         && rm -rf /var/lib/apt/lists/*
+
+# # apt from auto upgrading the cublas package.
+# # See https://gitlab.com/nvidia/container-images/cuda/-/issues/88
+# RUN apt-mark hold libcublas-dev-11-3 libnccl-dev
+# ENV LIBRARY_PATH /usr/local/cuda/lib64/stubs
+
+# ENV CUDNN_VERSION 8.2.1.32
+# ENV CUDA_VERSION cuda11.3
+# LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
+
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#     libcudnn8=$CUDNN_VERSION-1+cuda11.3 \
+# && \
+#     apt-mark hold libcudnn8 && \
+#     rm -rf /var/lib/apt/lists/*
+
+# # import os; import tensorflow as tf
+# # os.environ['CUDA_VISIBLE_DEVICES'] ="0"
+# # os.environ['TF_XLA_FLAGS'] = '--tf_xla_enable_xla_devices'
+# # print("GPUs: ", len(tf.config.experimental.list_physical_devices('GPU')))
+# # print(tf.reduce_sum(tf.random.normal([1000, 1000])))
+
+# # lspci | grep -i nvidia
+# # uname -m && cat /etc/*release
+
+# # docker run -it --rm --gpus all test:tf
+
+# RUN add-apt-repository ppa:graphics-drivers/ppa
+# RUN apt-get install --no-install-recommends nvidia-driver-470 -y
